@@ -78,13 +78,3 @@ Simply open the `index.html` file in any modern web browser. Edit the grid and c
 
 ---
 
-## License
-
-MIT License
-
----
-
-## Author
-
-Your Name | Your Contact Info (optional)
-
