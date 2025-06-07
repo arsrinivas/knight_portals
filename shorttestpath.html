@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>♟️ Knights and Portals</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 30px;
+      background: #f5f7fa;
+    }
+    textarea {
+      width: 360px;
+      height: 150px;
+      font-family: monospace;
+      font-size: 16px;
+      padding: 10px;
+    }
+    button {
+      padding: 10px 25px;
+      font-size: 16px;
+      background-color: #0b6bcb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #095cad;
+    }
+    #output {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<h2>♟️ Knights and Portals</h2>
+<p>Enter grid (S=Start, E=End, 0=empty, 1=wall, P=portal):</p>
+
+<textarea id="grid-input">S000
+0P00
+00P0
+000E</textarea><br>
+
+<button onclick="runKnightPortal()">Find Shortest Path</button>
+
+<div id="output"></div>
+
+<script>
+  function runKnightPortal() {
+    const input = document.getElementById("grid-input").value.trim().split('\n').map(r => r.trim().split(''));
+    const result = shortestPathWithTeleport(input);
+    document.getElementById("output").innerText = result === -1
+      ? "❌ No Path Found"
+      : `✅ Shortest Path: ${result} steps`;
+  }
+
+  function bfs(grid, start) {
+    const rows = grid.length, cols = grid[0].length;
+    const dist = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
+    const q = [start];
+    dist[start[0]][start[1]] = 0;
+    const dirs = [[0,1],[1,0],[-1,0],[0,-1]];
+
+    while (q.length) {
+      const [r, c] = q.shift();
+      for (let [dr, dc] of dirs) {
+        const nr = r + dr, nc = c + dc;
+        if (
+          nr >= 0 && nr < rows &&
+          nc >= 0 && nc < cols &&
+          grid[nr][nc] !== '1' &&
+          dist[nr][nc] === Infinity
+        ) {
+          dist[nr][nc] = dist[r][c] + 1;
+          q.push([nr, nc]);
+        }
+      }
+    }
+    return dist;
+  }
+
+  function shortestPathWithTeleport(grid) {
+    const rows = grid.length, cols = grid[0].length;
+    let start = null, end = null;
+    const portals = [];
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (grid[r][c] === 'S') start = [r, c];
+        else if (grid[r][c] === 'E') end = [r, c];
+        else if (grid[r][c] === 'P') portals.push([r, c]);
+      }
+    }
+
+    if (!start || !end) return -1;
+
+    const fromStart = bfs(grid, start);
+    const fromEnd = bfs(grid, end);
+
+    let minPath = fromStart[end[0]][end[1]];
+
+    // Consider teleportation between portals
+    for (let i = 0; i < portals.length; i++) {
+      const [r1, c1] = portals[i];
+      for (let j = 0; j < portals.length; j++) {
+        if (i === j) continue; // can't teleport to same portal
+        const [r2, c2] = portals[j];
+        const d1 = fromStart[r1][c1];
+        const d2 = fromEnd[r2][c2];
+        if (d1 !== Infinity && d2 !== Infinity) {
+          const total = d1 + 1 + d2; // 1 step teleport
+          if (total < minPath) minPath = total;
+        }
+      }
+    }
+
+    return minPath === Infinity ? -1 : minPath;
+  }
+</script>
+
+</body>
+</html>
